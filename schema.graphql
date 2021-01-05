@@ -4,3 +4,46 @@ type ExampleEntity @entity {
   trader: Bytes! # address
   src: Bytes! # address
 }
+
+type User @entity {
+  id: ID!
+  swaps: [Swap!] @derivedFrom(field: "user")
+}
+
+type Token @entity {
+  # token address
+  id: ID!
+
+  # mirrored from the smart contract
+  symbol: String!
+  name: String!
+  decimals: BigInt!
+}
+
+type Swap @entity {
+  # transaction hash
+  id: ID!
+  timestamp: BigInt! # need this to pull recent txns for specific token or pair
+  user: User!
+
+  # populated from the Swap event
+  trader: Bytes!
+  src: Bytes!
+  dst: Bytes!
+  srcAmount: BigDecimal!
+  dstAmout: BigDecimal!
+  recipient: Bytes!
+  gasUsed: BigDecimal!
+  gasPrice: BigDecimal!
+}
+
+type TokenDayData @entity {
+  id: ID!
+  date: Int!
+  token: Token!
+}
+
+type KrystalDayData @entity {
+  id: ID!
+  date: Int
+}

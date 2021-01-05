@@ -2,7 +2,7 @@
   "name": "dev-sw-sub-graph",
   "license": "UNLICENSED",
   "scripts": {
-    "codegen": "graph codegen",
+    "codegen": "graph codegen --output-dir src/types/",
     "build": "graph build",
     "deploy": "graph deploy --node https://api.thegraph.com/deploy/ --ipfs https://api.thegraph.com/ipfs/ namnm1991/dev-sw-sub-graph",
     "create-local": "graph create --node http://localhost:8020/ namnm1991/dev-sw-sub-graph",

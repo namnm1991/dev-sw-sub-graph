@@ -1,16 +1,19 @@
-specVersion: 0.0.1
+specVersion: 0.0.2
+description: SmartWallet
+repository: https://github.com/namnm1991/dev-sw-sub-graph
 schema:
   file: ./schema.graphql
 dataSources:
   - kind: ethereum/contract
-    name: SWSwap
+    name: Swap
     network: ropsten
     source:
       address: "0x4A0C59CcCae7B4F0732a4A1b9A7BDA49cc1d88F9"
-      abi: SWSwap
+      abi: Swap
+      startBlock: 9309234
     mapping:
       kind: ethereum/events
-      apiVersion: 0.0.2
+      apiVersion: 0.0.4
       language: wasm/assemblyscript
       entities:
         - KyberTrade
@@ -21,8 +24,14 @@ dataSources:
         - UniswapTradeAndRepay
         - WithdrawFromLending
       abis:
-        - name: SWSwap
-          file: ./abis/SWSwap.json
+        - name: Swap
+          file: ./abis/Swap.json
+        - name: ERC20
+          file: ./abis/ERC20.json
+        - name: ERC20SymbolBytes
+          file: ./abis/ERC20SymbolBytes.json
+        - name: ERC20NameBytes
+          file: ./abis/ERC20NameBytes.json
       eventHandlers:
         - event: KyberTrade(indexed address,indexed address,indexed address,uint256,uint256,address,uint256,address,bytes,bool,uint256)
           handler: handleKyberTrade
@@ -38,4 +47,4 @@ dataSources:
           handler: handleUniswapTradeAndRepay
         - event: WithdrawFromLending(indexed uint8,address,uint256,uint256,uint256,bool,uint256)
           handler: handleWithdrawFromLending
-      file: ./src/mapping.ts
+      file: ./src/mappings/swap.ts
