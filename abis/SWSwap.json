@@ -1,0 +1,822 @@
+[
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "trader",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "contract IERC20Ext",
+        "name": "src",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "contract IERC20Ext",
+        "name": "dest",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "srcAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "destAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "platformFeeBps",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "platformWallet",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes",
+        "name": "hint",
+        "type": "bytes"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "useGasToken",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "numGasBurns",
+        "type": "uint256"
+      }
+    ],
+    "name": "KyberTrade",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "trader",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "enum ISmartWalletLending.LendingPlatform",
+        "name": "platform",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "contract IERC20Ext",
+        "name": "src",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "contract IERC20Ext",
+        "name": "dest",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "srcAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "destAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "platformFeeBps",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "platformWallet",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes",
+        "name": "hint",
+        "type": "bytes"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "useGasToken",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "numGasBurns",
+        "type": "uint256"
+      }
+    ],
+    "name": "KyberTradeAndDeposit",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "trader",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "enum ISmartWalletLending.LendingPlatform",
+        "name": "platform",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "contract IERC20Ext",
+        "name": "src",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "contract IERC20Ext",
+        "name": "dest",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "srcAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "destAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "payAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "feeAndRateMode",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "platformWallet",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes",
+        "name": "hint",
+        "type": "bytes"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "useGasToken",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "numGasBurns",
+        "type": "uint256"
+      }
+    ],
+    "name": "KyberTradeAndRepay",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "trader",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "router",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address[]",
+        "name": "tradePath",
+        "type": "address[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "srcAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "destAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "platformFeeBps",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "platformWallet",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "feeInSrc",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "useGasToken",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "numGasBurns",
+        "type": "uint256"
+      }
+    ],
+    "name": "UniswapTrade",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "trader",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "enum ISmartWalletLending.LendingPlatform",
+        "name": "platform",
+        "type": "uint8"
+      },
+      {
+        "indexed": true,
+        "internalType": "contract IUniswapV2Router02",
+        "name": "router",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address[]",
+        "name": "tradePath",
+        "type": "address[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "srcAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "destAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "platformFeeBps",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "platformWallet",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "useGasToken",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "numGasBurns",
+        "type": "uint256"
+      }
+    ],
+    "name": "UniswapTradeAndDeposit",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "trader",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "enum ISmartWalletLending.LendingPlatform",
+        "name": "platform",
+        "type": "uint8"
+      },
+      {
+        "indexed": true,
+        "internalType": "contract IUniswapV2Router02",
+        "name": "router",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address[]",
+        "name": "tradePath",
+        "type": "address[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "srcAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "destAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "payAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "feeAndRateMode",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "platformWallet",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "useGasToken",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "numGasBurns",
+        "type": "uint256"
+      }
+    ],
+    "name": "UniswapTradeAndRepay",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "enum ISmartWalletLending.LendingPlatform",
+        "name": "platform",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "contract IERC20Ext",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "minReturn",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "actualReturnAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "useGasToken",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "numGasBurns",
+        "type": "uint256"
+      }
+    ],
+    "name": "WithdrawFromLending",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      { "internalType": "address[]", "name": "holders", "type": "address[]" },
+      {
+        "internalType": "contract ICompErc20[]",
+        "name": "cTokens",
+        "type": "address[]"
+      },
+      { "internalType": "bool", "name": "borrowers", "type": "bool" },
+      { "internalType": "bool", "name": "suppliers", "type": "bool" },
+      { "internalType": "bool", "name": "useGasToken", "type": "bool" }
+    ],
+    "name": "claimComp",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address[]",
+        "name": "plaftformWallets",
+        "type": "address[]"
+      },
+      {
+        "internalType": "contract IERC20Ext[]",
+        "name": "tokens",
+        "type": "address[]"
+      }
+    ],
+    "name": "claimPlatformFees",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract IERC20Ext",
+        "name": "src",
+        "type": "address"
+      },
+      {
+        "internalType": "contract IERC20Ext",
+        "name": "dest",
+        "type": "address"
+      },
+      { "internalType": "uint256", "name": "srcAmount", "type": "uint256" },
+      {
+        "internalType": "uint256",
+        "name": "platformFeeBps",
+        "type": "uint256"
+      },
+      { "internalType": "bytes", "name": "hint", "type": "bytes" }
+    ],
+    "name": "getExpectedReturnKyber",
+    "outputs": [
+      { "internalType": "uint256", "name": "destAmount", "type": "uint256" },
+      { "internalType": "uint256", "name": "expectedRate", "type": "uint256" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract IUniswapV2Router02",
+        "name": "router",
+        "type": "address"
+      },
+      { "internalType": "uint256", "name": "srcAmount", "type": "uint256" },
+      { "internalType": "address[]", "name": "tradePath", "type": "address[]" },
+      { "internalType": "uint256", "name": "platformFeeBps", "type": "uint256" }
+    ],
+    "name": "getExpectedReturnUniswap",
+    "outputs": [
+      { "internalType": "uint256", "name": "destAmount", "type": "uint256" },
+      { "internalType": "uint256", "name": "expectedRate", "type": "uint256" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract IERC20Ext",
+        "name": "src",
+        "type": "address"
+      },
+      {
+        "internalType": "contract IERC20Ext",
+        "name": "dest",
+        "type": "address"
+      },
+      { "internalType": "uint256", "name": "srcAmount", "type": "uint256" },
+      {
+        "internalType": "uint256",
+        "name": "minConversionRate",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address payable",
+        "name": "recipient",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "platformFeeBps",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address payable",
+        "name": "platformWallet",
+        "type": "address"
+      },
+      { "internalType": "bytes", "name": "hint", "type": "bytes" },
+      { "internalType": "bool", "name": "useGasToken", "type": "bool" }
+    ],
+    "name": "swapKyber",
+    "outputs": [
+      { "internalType": "uint256", "name": "destAmount", "type": "uint256" }
+    ],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "enum ISmartWalletLending.LendingPlatform",
+        "name": "platform",
+        "type": "uint8"
+      },
+      {
+        "internalType": "contract IERC20Ext",
+        "name": "src",
+        "type": "address"
+      },
+      {
+        "internalType": "contract IERC20Ext",
+        "name": "dest",
+        "type": "address"
+      },
+      { "internalType": "uint256", "name": "srcAmount", "type": "uint256" },
+      {
+        "internalType": "uint256",
+        "name": "minConversionRate",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "platformFeeBps",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address payable",
+        "name": "platformWallet",
+        "type": "address"
+      },
+      { "internalType": "bytes", "name": "hint", "type": "bytes" },
+      { "internalType": "bool", "name": "useGasToken", "type": "bool" }
+    ],
+    "name": "swapKyberAndDeposit",
+    "outputs": [
+      { "internalType": "uint256", "name": "destAmount", "type": "uint256" }
+    ],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "enum ISmartWalletLending.LendingPlatform",
+        "name": "platform",
+        "type": "uint8"
+      },
+      {
+        "internalType": "contract IERC20Ext",
+        "name": "src",
+        "type": "address"
+      },
+      {
+        "internalType": "contract IERC20Ext",
+        "name": "dest",
+        "type": "address"
+      },
+      { "internalType": "uint256", "name": "srcAmount", "type": "uint256" },
+      { "internalType": "uint256", "name": "payAmount", "type": "uint256" },
+      {
+        "internalType": "uint256",
+        "name": "feeAndRateMode",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address payable",
+        "name": "platformWallet",
+        "type": "address"
+      },
+      { "internalType": "bytes", "name": "hint", "type": "bytes" },
+      { "internalType": "bool", "name": "useGasToken", "type": "bool" }
+    ],
+    "name": "swapKyberAndRepay",
+    "outputs": [
+      { "internalType": "uint256", "name": "destAmount", "type": "uint256" }
+    ],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract IUniswapV2Router02",
+        "name": "router",
+        "type": "address"
+      },
+      { "internalType": "uint256", "name": "srcAmount", "type": "uint256" },
+      { "internalType": "uint256", "name": "minDestAmount", "type": "uint256" },
+      { "internalType": "address[]", "name": "tradePath", "type": "address[]" },
+      {
+        "internalType": "address payable",
+        "name": "recipient",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "platformFeeBps",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address payable",
+        "name": "platformWallet",
+        "type": "address"
+      },
+      { "internalType": "bool", "name": "feeInSrc", "type": "bool" },
+      { "internalType": "bool", "name": "useGasToken", "type": "bool" }
+    ],
+    "name": "swapUniswap",
+    "outputs": [
+      { "internalType": "uint256", "name": "destAmount", "type": "uint256" }
+    ],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "enum ISmartWalletLending.LendingPlatform",
+        "name": "platform",
+        "type": "uint8"
+      },
+      {
+        "internalType": "contract IUniswapV2Router02",
+        "name": "router",
+        "type": "address"
+      },
+      { "internalType": "uint256", "name": "srcAmount", "type": "uint256" },
+      { "internalType": "uint256", "name": "minDestAmount", "type": "uint256" },
+      { "internalType": "address[]", "name": "tradePath", "type": "address[]" },
+      {
+        "internalType": "uint256",
+        "name": "platformFeeBps",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address payable",
+        "name": "platformWallet",
+        "type": "address"
+      },
+      { "internalType": "bool", "name": "useGasToken", "type": "bool" }
+    ],
+    "name": "swapUniswapAndDeposit",
+    "outputs": [
+      { "internalType": "uint256", "name": "destAmount", "type": "uint256" }
+    ],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "enum ISmartWalletLending.LendingPlatform",
+        "name": "platform",
+        "type": "uint8"
+      },
+      {
+        "internalType": "contract IUniswapV2Router02",
+        "name": "router",
+        "type": "address"
+      },
+      { "internalType": "uint256", "name": "srcAmount", "type": "uint256" },
+      { "internalType": "uint256", "name": "payAmount", "type": "uint256" },
+      { "internalType": "address[]", "name": "tradePath", "type": "address[]" },
+      {
+        "internalType": "uint256",
+        "name": "feeAndRateMode",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address payable",
+        "name": "platformWallet",
+        "type": "address"
+      },
+      { "internalType": "bool", "name": "useGasToken", "type": "bool" }
+    ],
+    "name": "swapUniswapAndRepay",
+    "outputs": [
+      { "internalType": "uint256", "name": "destAmount", "type": "uint256" }
+    ],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "enum ISmartWalletLending.LendingPlatform",
+        "name": "platform",
+        "type": "uint8"
+      },
+      {
+        "internalType": "contract IERC20Ext",
+        "name": "token",
+        "type": "address"
+      },
+      { "internalType": "uint256", "name": "amount", "type": "uint256" },
+      { "internalType": "uint256", "name": "minReturn", "type": "uint256" },
+      { "internalType": "bool", "name": "useGasToken", "type": "bool" }
+    ],
+    "name": "withdrawFromLendingPlatform",
+    "outputs": [
+      { "internalType": "uint256", "name": "returnedAmount", "type": "uint256" }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]

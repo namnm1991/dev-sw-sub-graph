@@ -1,0 +1,41 @@
+specVersion: 0.0.1
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum/contract
+    name: SWSwap
+    network: ropsten
+    source:
+      address: "0x4A0C59CcCae7B4F0732a4A1b9A7BDA49cc1d88F9"
+      abi: SWSwap
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.2
+      language: wasm/assemblyscript
+      entities:
+        - KyberTrade
+        - KyberTradeAndDeposit
+        - KyberTradeAndRepay
+        - UniswapTrade
+        - UniswapTradeAndDeposit
+        - UniswapTradeAndRepay
+        - WithdrawFromLending
+      abis:
+        - name: SWSwap
+          file: ./abis/SWSwap.json
+      eventHandlers:
+        - event: KyberTrade(indexed address,indexed address,indexed address,uint256,uint256,address,uint256,address,bytes,bool,uint256)
+          handler: handleKyberTrade
+        - event: KyberTradeAndDeposit(indexed address,indexed uint8,address,indexed address,uint256,uint256,uint256,address,bytes,bool,uint256)
+          handler: handleKyberTradeAndDeposit
+        - event: KyberTradeAndRepay(indexed address,indexed uint8,address,indexed address,uint256,uint256,uint256,uint256,address,bytes,bool,uint256)
+          handler: handleKyberTradeAndRepay
+        - event: UniswapTrade(indexed address,indexed address,address[],uint256,uint256,address,uint256,address,bool,bool,uint256)
+          handler: handleUniswapTrade
+        - event: UniswapTradeAndDeposit(indexed address,indexed uint8,indexed address,address[],uint256,uint256,uint256,address,bool,uint256)
+          handler: handleUniswapTradeAndDeposit
+        - event: UniswapTradeAndRepay(indexed address,indexed uint8,indexed address,address[],uint256,uint256,uint256,uint256,address,bool,uint256)
+          handler: handleUniswapTradeAndRepay
+        - event: WithdrawFromLending(indexed uint8,address,uint256,uint256,uint256,bool,uint256)
+          handler: handleWithdrawFromLending
+      file: ./src/mapping.ts
