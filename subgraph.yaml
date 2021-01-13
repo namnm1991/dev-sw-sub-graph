@@ -25,7 +25,11 @@ dataSources:
         - WithdrawFromLending
       abis:
         - name: Swap
-          file: ./abis/Swap.json
+          file: ./abis/swap.json
+        - name: UniswapRouter
+          file: ./abis/uniswapRouter.json
+        - name: KyberNetwork
+          file: ./abis/kyberNetwork.json
         - name: ERC20
           file: ./abis/ERC20.json
         - name: ERC20SymbolBytes

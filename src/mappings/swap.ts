@@ -1,4 +1,4 @@
-import { BigInt } from "@graphprotocol/graph-ts"
+import { BigDecimal, BigInt } from "@graphprotocol/graph-ts"
 import {
   KyberTrade,
   KyberTradeAndDeposit,
@@ -8,58 +8,85 @@ import {
   UniswapTradeAndRepay,
   WithdrawFromLending
 } from "./../types/Swap/Swap"
-import { User, Swap, Token, ExampleEntity } from "./../types/schema"
+import { Swap, ExampleEntity } from "./../types/schema"
 import {
-  fetchTokenSymbol,
-  fetchTokenName,
-  fetchTokenDecimals,
   convertTokenToDecimal,
   convertEthToDecimal,
-  convertEthToGwei
+  convertEthToGwei,
 } from './helpers'
+import { getToken } from './token'
+import { getUser } from './user'
+import { getCounter } from './counter'
+import { getEthPriceInUSD, getTokenPriceInEth, getTokenPriceInEthKN } from './pricing'
 
 
 export function handleKyberTrade(event: KyberTrade): void {
-  let swap = new Swap(event.transaction.hash.toHexString());
-
-  let user = User.load(event.params.trader.toHexString());
-  if (user === null) {
-    user = new User(event.params.trader.toHexString());
-    user.save()
-  }
+  let user = getUser(event.params.trader);
 
   // create the tokens
-  let srcAddr = event.params.src;
-  let src = Token.load(srcAddr.toHexString());
-  if (src === null) {
-    src = new Token(srcAddr.toHexString());
-    src.symbol = fetchTokenSymbol(srcAddr);
-    src.name = fetchTokenName(srcAddr);
-    src.decimals = fetchTokenDecimals(srcAddr);
-    src.save()
-  }
-  let dstAddr = event.params.dest;
-  let dst = Token.load(dstAddr.toHexString());
-  if (dst === null) {
-    dst = new Token(dstAddr.toHexString());
-    dst.symbol = fetchTokenSymbol(dstAddr);
-    dst.name = fetchTokenName(dstAddr);
-    dst.decimals = fetchTokenDecimals(dstAddr);
-    dst.save()
-  }
+  let src = getToken(event.params.src);
+  let dst = getToken(event.params.dest);
 
+  let srcAmountInEth = getTokenPriceInEthKN(src, event.params.srcAmount);
+  let dstAmountInEth = getTokenPriceInEthKN(dst, event.params.destAmount);
+  let amountETH = srcAmountInEth.plus(dstAmountInEth).div(BigDecimal.fromString('2'));
+  let ethPrice = getEthPriceInUSD();
+
+  let counter = getCounter();
+  counter.txCount = counter.txCount.plus(BigInt.fromI32(1));
+  counter.totalVolumeETH = counter.totalVolumeETH.plus(amountETH);
+  counter.totalVolumeUSD = counter.totalVolumeUSD.plus(amountETH.times(ethPrice));
+  counter.save()
+
+  let swap = new Swap(event.transaction.hash.toHexString());
   swap.user = user.id;
   swap.timestamp = event.block.timestamp;
   swap.trader = event.params.trader;
-  swap.src = srcAddr;
+  swap.src = src.id;
   swap.srcAmount = convertTokenToDecimal(event.params.srcAmount, src.decimals);
-  swap.dst = dstAddr;
+  swap.dst = dst.id;
   swap.dstAmout = convertTokenToDecimal(event.params.destAmount, dst.decimals);
+  swap.amountETH = amountETH
+  swap.amountUSD = amountETH.times(ethPrice);
   swap.recipient = event.params.recipient;
   swap.gasPrice = convertEthToGwei(event.transaction.gasPrice);
   swap.gasUsed = convertEthToDecimal(event.transaction.gasUsed);
-
   swap.save();
+}
+
+export function handleUniswapTrade(event: UniswapTrade): void {
+  let user = getUser(event.params.trader);
+
+  // create the tokens
+  let tradePath = event.params.tradePath;
+  let src = getToken(tradePath[0]);
+  let dst = getToken(tradePath[tradePath.length - 1]);
+
+  let srcAmountInEth = getTokenPriceInEth(src, event.params.srcAmount);
+  let dstAmountInEth = getTokenPriceInEth(dst, event.params.destAmount);
+  let amountETH = srcAmountInEth.plus(dstAmountInEth).div(BigDecimal.fromString('2'));
+  let ethPrice = getEthPriceInUSD();
+
+  let counter = getCounter();
+  counter.txCount = counter.txCount.plus(BigInt.fromI32(1));
+  counter.totalVolumeETH = counter.totalVolumeETH.plus(amountETH);
+  counter.totalVolumeUSD = counter.totalVolumeUSD.plus(amountETH.times(ethPrice));
+  counter.save()
+
+  let swap = new Swap(event.transaction.hash.toHexString());
+  swap.user = user.id;
+  swap.timestamp = event.block.timestamp;
+  swap.trader = event.params.trader;
+  swap.src = src.id;
+  swap.srcAmount = convertTokenToDecimal(event.params.srcAmount, src.decimals);
+  swap.dst = dst.id;
+  swap.dstAmout = convertTokenToDecimal(event.params.destAmount, dst.decimals);
+  swap.amountETH = amountETH;
+  swap.amountUSD = amountETH.times(ethPrice);
+  swap.recipient = event.params.recipient;
+  swap.gasPrice = convertEthToGwei(event.transaction.gasPrice);
+  swap.gasUsed = convertEthToDecimal(event.transaction.gasUsed);
+  swap.save()
 }
 
 export function handleKyberTradeTmpl(event: KyberTrade): void {
@@ -106,58 +133,14 @@ export function handleKyberTradeTmpl(event: KyberTrade): void {
   // - contract.withdrawFromLendingPlatform(...)
 }
 
-export function handleKyberTradeAndDeposit(event: KyberTradeAndDeposit): void {}
+export function handleKyberTradeAndDeposit(event: KyberTradeAndDeposit): void { }
 
-export function handleKyberTradeAndRepay(event: KyberTradeAndRepay): void {}
-
-export function handleUniswapTrade(event: UniswapTrade): void {
-  let swap = new Swap(event.transaction.hash.toHexString());
-
-  let user = User.load(event.params.trader.toHexString());
-  if (user === null) {
-    user = new User(event.params.trader.toHexString());
-    user.save()
-  }
-
-  // create the tokens
-  let tradePath = event.params.tradePath;
-  let srcAddr = tradePath[0];
-  let src = Token.load(srcAddr.toHexString());
-  if (src === null) {
-    src = new Token(srcAddr.toHexString());
-    src.symbol = fetchTokenSymbol(srcAddr);
-    src.name = fetchTokenName(srcAddr);
-    src.decimals = fetchTokenDecimals(srcAddr);
-    src.save()
-  }
-  let dstAddr = tradePath[tradePath.length-1];
-  let dst = Token.load(dstAddr.toHexString());
-  if (dst === null) {
-    dst = new Token(dstAddr.toHexString());
-    dst.symbol = fetchTokenSymbol(dstAddr);
-    dst.name = fetchTokenName(dstAddr);
-    dst.decimals = fetchTokenDecimals(dstAddr);
-    dst.save()
-  }
-
-  swap.user = user.id;
-  swap.timestamp = event.block.timestamp;
-  swap.trader = event.params.trader;
-  swap.src = srcAddr;
-  swap.srcAmount = convertTokenToDecimal(event.params.srcAmount, src.decimals);
-  swap.dst = dstAddr;
-  swap.dstAmout = convertTokenToDecimal(event.params.destAmount, dst.decimals);
-  swap.recipient = event.params.recipient;
-  swap.gasPrice = convertEthToGwei(event.transaction.gasPrice);
-  swap.gasUsed = convertEthToDecimal(event.transaction.gasUsed);
-
-  swap.save()
-}
+export function handleKyberTradeAndRepay(event: KyberTradeAndRepay): void { }
 
 export function handleUniswapTradeAndDeposit(
   event: UniswapTradeAndDeposit
-): void {}
+): void { }
 
-export function handleUniswapTradeAndRepay(event: UniswapTradeAndRepay): void {}
+export function handleUniswapTradeAndRepay(event: UniswapTradeAndRepay): void { }
 
-export function handleWithdrawFromLending(event: WithdrawFromLending): void {}
+export function handleWithdrawFromLending(event: WithdrawFromLending): void { }
