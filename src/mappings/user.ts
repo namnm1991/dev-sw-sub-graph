@@ -1,4 +1,4 @@
-import { Address } from '@graphprotocol/graph-ts'
+import { Address, BigInt } from '@graphprotocol/graph-ts'
 import { User } from "../types/schema"
 
 export function getUser(address: Address): User {
@@ -6,6 +6,7 @@ export function getUser(address: Address): User {
 
   if (user === null) {
     user = new User(address.toHex())
+    user.txCount = BigInt.fromI32(0)
     user.save()
   }
 

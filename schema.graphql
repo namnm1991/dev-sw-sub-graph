@@ -24,6 +24,7 @@ type ExampleEntity @entity {
 
 type User @entity {
   id: ID!
+  txCount: BigInt!
   swaps: [Swap!] @derivedFrom(field: "user")
 }
 
@@ -64,6 +65,9 @@ type Counter @entity {
   # total volume
   totalVolumeUSD: BigDecimal!
   totalVolumeETH: BigDecimal!
+
+  # total user
+  totalUser: BigInt!
 
   # transactions
   txCount: BigInt!

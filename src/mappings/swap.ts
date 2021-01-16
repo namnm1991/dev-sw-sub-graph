@@ -13,16 +13,16 @@ import {
   convertTokenToDecimal,
   convertEthToDecimal,
   convertEthToGwei,
+  ONE_BI,
 } from './helpers'
 import { getToken } from './token'
 import { getUser } from './user'
 import { getCounter } from './counter'
 import { getEthPriceInUSD, getTokenPriceInEth, getTokenPriceInEthKN } from './pricing'
+import { ZERO_BI } from './helpers'
 
 
 export function handleKyberTrade(event: KyberTrade): void {
-  let user = getUser(event.params.trader);
-
   // create the tokens
   let src = getToken(event.params.src);
   let dst = getToken(event.params.dest);
@@ -32,11 +32,18 @@ export function handleKyberTrade(event: KyberTrade): void {
   let amountETH = srcAmountInEth.plus(dstAmountInEth).div(BigDecimal.fromString('2'));
   let ethPrice = getEthPriceInUSD();
 
+  let user = getUser(event.params.trader);
   let counter = getCounter();
   counter.txCount = counter.txCount.plus(BigInt.fromI32(1));
   counter.totalVolumeETH = counter.totalVolumeETH.plus(amountETH);
   counter.totalVolumeUSD = counter.totalVolumeUSD.plus(amountETH.times(ethPrice));
+  if (user.txCount.equals(ZERO_BI)) {
+    counter.totalUser = counter.totalUser.plus(ONE_BI)
+  }
   counter.save()
+
+  user.txCount = user.txCount.plus(ONE_BI)
+  user.save()
 
   let swap = new Swap(event.transaction.hash.toHexString());
   swap.user = user.id;
@@ -55,8 +62,6 @@ export function handleKyberTrade(event: KyberTrade): void {
 }
 
 export function handleUniswapTrade(event: UniswapTrade): void {
-  let user = getUser(event.params.trader);
-
   // create the tokens
   let tradePath = event.params.tradePath;
   let src = getToken(tradePath[0]);
@@ -67,11 +72,18 @@ export function handleUniswapTrade(event: UniswapTrade): void {
   let amountETH = srcAmountInEth.plus(dstAmountInEth).div(BigDecimal.fromString('2'));
   let ethPrice = getEthPriceInUSD();
 
+  let user = getUser(event.params.trader);
   let counter = getCounter();
   counter.txCount = counter.txCount.plus(BigInt.fromI32(1));
   counter.totalVolumeETH = counter.totalVolumeETH.plus(amountETH);
   counter.totalVolumeUSD = counter.totalVolumeUSD.plus(amountETH.times(ethPrice));
+  if (user.txCount.equals(ZERO_BI)) {
+    counter.totalUser = counter.totalUser.plus(ONE_BI)
+  }
   counter.save()
+
+  user.txCount = user.txCount.plus(ONE_BI)
+  user.save()
 
   let swap = new Swap(event.transaction.hash.toHexString());
   swap.user = user.id;
