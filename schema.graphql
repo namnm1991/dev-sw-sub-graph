@@ -1,3 +1,7 @@
+enum Platform {
+  KyberNetwork
+  Uniswap
+}
 type Token @entity {
   # token address
   id: ID!
@@ -9,6 +13,7 @@ type Token @entity {
 
   # token specific volume
   volume: BigDecimal!
+  volumeETH: BigDecimal!
   volumeUSD: BigDecimal!
 
   # transactions across all pairs
@@ -39,13 +44,15 @@ type Swap @entity {
   src: Token!
   dst: Token!
   srcAmount: BigDecimal!
-  dstAmout: BigDecimal!
+  dstAmount: BigDecimal!
   recipient: Bytes!
   gasUsed: BigDecimal!
   gasPrice: BigDecimal!
 
   amountUSD: BigDecimal!
-  amountETH: BigDecimal
+  amountETH: BigDecimal!
+
+  platform: Platform!
 }
 
 # type TokenDayData @entity {
@@ -70,5 +77,27 @@ type Counter @entity {
   totalUser: BigInt!
 
   # transactions
+  txCount: BigInt!
+}
+
+type DayData @entity {
+  id: ID!
+
+  date: Int!
+
+  volumeETH: BigDecimal!
+  volumeUSD: BigDecimal! 
+  txCount: BigInt
+}
+
+type TokenDayData @entity {
+  id: ID!
+  date: Int!
+  token: Token!
+
+  # volume stats
+  volumeToken: BigDecimal!
+  volumeETH: BigDecimal!
+  volumeUSD: BigDecimal!
   txCount: BigInt!
 }

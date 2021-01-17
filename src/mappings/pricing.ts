@@ -31,10 +31,11 @@ let uniswapRouter = UniswapRouter.bind(Address.fromString(ROUTER_ADDRESS))
 let kyberNetwork = KyberNetwork.bind(Address.fromString(KYBER_NETWORK_ADDRESS));
 
 export function getTokenPriceInEthKN(token: Token, amount: BigInt): BigDecimal {
+  if (token.id == WETH_ADDRESS || token.id == ETH_ADDRESS) {
+    return ONE_BD
+  }
   let rates = kyberNetwork.getExpectedRate(Address.fromString(token.id), Address.fromString(ETH_ADDRESS), amount)
-  let expectedRate = rates.value0
-  let ethPerToken = convertEthToDecimal(expectedRate)
-  return ethPerToken.times(convertTokenToDecimal(amount, token.decimals))
+  return convertEthToDecimal(rates.value0)
 }
 
 function getAmountOut(amountIn: BigInt, path: Array<Address>): BigInt {
@@ -55,9 +56,9 @@ export function getEthPriceInUSD(): BigDecimal {
   return convertTokenToDecimal(daiAmount, dai.decimals);
 }
 
-export function getTokenPriceInEth(token: Token, amount: BigInt): BigDecimal {
-  if (token.id == WETH_ADDRESS) {
-    return ONE_BD
+export function getTokenInEth(token: Token, amount: BigInt): BigDecimal {
+  if (token.id == WETH_ADDRESS || token.id == ETH_ADDRESS) {
+    return convertEthToDecimal(amount)
   }
 
   let path: Array<Address> = [Address.fromString(token.id), Address.fromString(WETH_ADDRESS)];

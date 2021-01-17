@@ -17,6 +17,7 @@ export function getToken(address: Address): Token {
     token.name = fetchTokenName(address)
     token.decimals = fetchTokenDecimals(address)
     token.volume = ZERO_BD
+    token.volumeETH = ZERO_BD
     token.volumeUSD = ZERO_BD
     token.txCount = ZERO_BI
     token.save()

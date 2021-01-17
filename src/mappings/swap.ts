@@ -1,4 +1,4 @@
-import { BigDecimal, BigInt } from "@graphprotocol/graph-ts"
+import { Address, BigDecimal, BigInt } from "@graphprotocol/graph-ts"
 import {
   KyberTrade,
   KyberTradeAndDeposit,
@@ -14,91 +14,123 @@ import {
   convertEthToDecimal,
   convertEthToGwei,
   ONE_BI,
+  ZERO_BI
 } from './helpers'
 import { getToken } from './token'
 import { getUser } from './user'
 import { getCounter } from './counter'
-import { getEthPriceInUSD, getTokenPriceInEth, getTokenPriceInEthKN } from './pricing'
-import { ZERO_BI } from './helpers'
+import { getEthPriceInUSD, getTokenInEth, getTokenPriceInEthKN } from './pricing'
+import { getDayData, getTokenDayData } from "./stats"
 
 
 export function handleKyberTrade(event: KyberTrade): void {
-  // create the tokens
-  let src = getToken(event.params.src);
-  let dst = getToken(event.params.dest);
+  let src = getToken(event.params.src)
+  let dst = getToken(event.params.dest)
 
-  let srcAmountInEth = getTokenPriceInEthKN(src, event.params.srcAmount);
-  let dstAmountInEth = getTokenPriceInEthKN(dst, event.params.destAmount);
-  let amountETH = srcAmountInEth.plus(dstAmountInEth).div(BigDecimal.fromString('2'));
+  let srcAmount = convertTokenToDecimal(event.params.srcAmount, src.decimals)
+  let srcAmountInEth = getTokenPriceInEthKN(src, event.params.srcAmount).times(srcAmount)
+
+  let dstAmount = convertTokenToDecimal(event.params.destAmount, dst.decimals)
+  let dstAmountInEth = getTokenPriceInEthKN(dst, event.params.destAmount).times(dstAmount)
+
+  let amountETH = srcAmountInEth.plus(dstAmountInEth).div(BigDecimal.fromString('2'))
   let ethPrice = getEthPriceInUSD();
 
-  let user = getUser(event.params.trader);
-  let counter = getCounter();
-  counter.txCount = counter.txCount.plus(BigInt.fromI32(1));
-  counter.totalVolumeETH = counter.totalVolumeETH.plus(amountETH);
-  counter.totalVolumeUSD = counter.totalVolumeUSD.plus(amountETH.times(ethPrice));
-  if (user.txCount.equals(ZERO_BI)) {
-    counter.totalUser = counter.totalUser.plus(ONE_BI)
-  }
-  counter.save()
-
-  user.txCount = user.txCount.plus(ONE_BI)
-  user.save()
-
-  let swap = new Swap(event.transaction.hash.toHexString());
-  swap.user = user.id;
-  swap.timestamp = event.block.timestamp;
-  swap.trader = event.params.trader;
-  swap.src = src.id;
-  swap.srcAmount = convertTokenToDecimal(event.params.srcAmount, src.decimals);
-  swap.dst = dst.id;
-  swap.dstAmout = convertTokenToDecimal(event.params.destAmount, dst.decimals);
+  let swap = new Swap(event.transaction.hash.toHexString())
+  swap.user = event.params.trader.toHex()
+  swap.timestamp = event.block.timestamp
+  swap.trader = event.params.trader
+  swap.src = src.id
+  swap.srcAmount = srcAmount
+  swap.dst = dst.id
+  swap.dstAmount = dstAmount
   swap.amountETH = amountETH
-  swap.amountUSD = amountETH.times(ethPrice);
-  swap.recipient = event.params.recipient;
-  swap.gasPrice = convertEthToGwei(event.transaction.gasPrice);
-  swap.gasUsed = convertEthToDecimal(event.transaction.gasUsed);
-  swap.save();
+  swap.amountUSD = amountETH.times(ethPrice)
+  swap.recipient = event.params.recipient
+  swap.gasPrice = convertEthToGwei(event.transaction.gasPrice)
+  swap.gasUsed = convertEthToDecimal(event.transaction.gasUsed)
+  swap.platform = "KyberNetwork"
+  swap.save()
+
+  handleSwap(swap)
 }
 
 export function handleUniswapTrade(event: UniswapTrade): void {
-  // create the tokens
   let tradePath = event.params.tradePath;
   let src = getToken(tradePath[0]);
   let dst = getToken(tradePath[tradePath.length - 1]);
 
-  let srcAmountInEth = getTokenPriceInEth(src, event.params.srcAmount);
-  let dstAmountInEth = getTokenPriceInEth(dst, event.params.destAmount);
+  let srcAmountInEth = getTokenInEth(src, event.params.srcAmount);
+  let dstAmountInEth = getTokenInEth(dst, event.params.destAmount);
   let amountETH = srcAmountInEth.plus(dstAmountInEth).div(BigDecimal.fromString('2'));
   let ethPrice = getEthPriceInUSD();
 
-  let user = getUser(event.params.trader);
-  let counter = getCounter();
-  counter.txCount = counter.txCount.plus(BigInt.fromI32(1));
-  counter.totalVolumeETH = counter.totalVolumeETH.plus(amountETH);
-  counter.totalVolumeUSD = counter.totalVolumeUSD.plus(amountETH.times(ethPrice));
-  if (user.txCount.equals(ZERO_BI)) {
-    counter.totalUser = counter.totalUser.plus(ONE_BI)
-  }
-  counter.save()
-
-  user.txCount = user.txCount.plus(ONE_BI)
-  user.save()
-
   let swap = new Swap(event.transaction.hash.toHexString());
-  swap.user = user.id;
+  swap.user = event.params.trader.toHex();
   swap.timestamp = event.block.timestamp;
   swap.trader = event.params.trader;
   swap.src = src.id;
   swap.srcAmount = convertTokenToDecimal(event.params.srcAmount, src.decimals);
   swap.dst = dst.id;
-  swap.dstAmout = convertTokenToDecimal(event.params.destAmount, dst.decimals);
+  swap.dstAmount = convertTokenToDecimal(event.params.destAmount, dst.decimals);
   swap.amountETH = amountETH;
   swap.amountUSD = amountETH.times(ethPrice);
   swap.recipient = event.params.recipient;
   swap.gasPrice = convertEthToGwei(event.transaction.gasPrice);
   swap.gasUsed = convertEthToDecimal(event.transaction.gasUsed);
+  swap.platform = "Uniswap"
   swap.save()
+
+  handleSwap(swap)
+}
+
+function handleSwap(swap: Swap): void {
+  let user = getUser(Address.fromString(swap.user))
+  let counter = getCounter()
+  counter.txCount = counter.txCount.plus(ONE_BI)
+  counter.totalVolumeETH = counter.totalVolumeETH.plus(swap.amountETH as BigDecimal)
+  counter.totalVolumeUSD = counter.totalVolumeUSD.plus(swap.amountUSD as BigDecimal)
+  if (user.txCount.equals(ZERO_BI)) {
+    counter.totalUser = counter.totalUser.plus(ONE_BI)
+  }
+  counter.save()
+
+  user.txCount = user.txCount.plus(ONE_BI)
+  user.save()
+
+  let dayData = getDayData(swap.timestamp)
+  dayData.txCount = dayData.txCount.plus(ONE_BI)
+  dayData.volumeETH = dayData.volumeETH.plus(swap.amountETH as BigDecimal)
+  dayData.volumeUSD = dayData.volumeUSD.plus(swap.amountUSD as BigDecimal)
+  dayData.save()
+
+  let src = getToken(Address.fromString(swap.src))
+  src.txCount = src.txCount.plus(ONE_BI)
+  src.volume = src.volume.plus(swap.srcAmount)
+  src.volumeETH = src.volumeETH.plus(swap.amountETH as BigDecimal)
+  src.volumeUSD = src.volumeUSD.plus(swap.amountUSD as BigDecimal)
+  src.save()
+
+  let srcDayData = getTokenDayData(src, swap.timestamp)
+  srcDayData.txCount = srcDayData.txCount.plus(ONE_BI)
+  srcDayData.volumeToken = srcDayData.volumeToken.plus(swap.srcAmount)
+  srcDayData.volumeETH = srcDayData.volumeETH.plus(swap.amountETH as BigDecimal)
+  srcDayData.volumeUSD = srcDayData.volumeUSD.plus(swap.amountUSD as BigDecimal)
+  srcDayData.save()
+
+  let dst = getToken(Address.fromString(swap.dst))
+  dst.txCount = dst.txCount.plus(ONE_BI)
+  dst.volume = dst.volume.plus(swap.dstAmount)
+  dst.volumeETH = dst.volumeETH.plus(swap.amountETH as BigDecimal)
+  dst.volumeUSD = dst.volumeUSD.plus(swap.amountUSD as BigDecimal)
+  dst.save()
+
+  let dstDayData = getTokenDayData(dst, swap.timestamp)
+  dstDayData.txCount = dstDayData.txCount.plus(ONE_BI)
+  dstDayData.volumeToken = dstDayData.volumeToken.plus(swap.srcAmount)
+  dstDayData.volumeETH = dstDayData.volumeETH.plus(swap.amountETH as BigDecimal)
+  dstDayData.volumeUSD = dstDayData.volumeUSD.plus(swap.amountUSD as BigDecimal)
+  dstDayData.save()
 }
 
 export function handleKyberTradeTmpl(event: KyberTrade): void {
