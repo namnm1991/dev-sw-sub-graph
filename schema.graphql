@@ -53,6 +53,12 @@ type Swap @entity {
   amountETH: BigDecimal!
 
   platform: Platform!
+
+  platformFeeBps: BigInt!
+  platformFeeWallet: Bytes!
+
+  feeToken: Token!
+  feeAmount: BigDecimal!
 }
 
 # type TokenDayData @entity {
@@ -67,7 +73,7 @@ type Swap @entity {
 # }
 
 type Counter @entity {
-  id: ID! 
+  id: ID!
 
   # total volume
   totalVolumeUSD: BigDecimal!
@@ -86,7 +92,7 @@ type DayData @entity {
   date: Int!
 
   volumeETH: BigDecimal!
-  volumeUSD: BigDecimal! 
+  volumeUSD: BigDecimal!
   txCount: BigInt
 }
 
@@ -100,4 +106,11 @@ type TokenDayData @entity {
   volumeETH: BigDecimal!
   volumeUSD: BigDecimal!
   txCount: BigInt!
+}
+
+type FeeDistributed @entity {
+  id: ID!
+  token: Token!
+  platformFeeWei: BigInt!
+  platformWallet: Bytes!
 }

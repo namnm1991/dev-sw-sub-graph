@@ -8,7 +8,7 @@ import {
   UniswapTradeAndRepay,
   WithdrawFromLending
 } from "./../types/Swap/Swap"
-import { Swap, ExampleEntity } from "./../types/schema"
+import { Swap, ExampleEntity, FeeDistributed, Token } from "./../types/schema"
 import {
   convertTokenToDecimal,
   convertEthToDecimal,
@@ -36,7 +36,7 @@ export function handleKyberTrade(event: KyberTrade): void {
   let amountETH = srcAmountInEth.plus(dstAmountInEth).div(BigDecimal.fromString('2'))
   let ethPrice = getEthPriceInUSD();
 
-  let swap = new Swap(event.transaction.hash.toHexString())
+  let swap = new Swap(event.transaction.hash.toHex())
   swap.user = event.params.trader.toHex()
   swap.timestamp = event.block.timestamp
   swap.trader = event.params.trader
@@ -50,6 +50,16 @@ export function handleKyberTrade(event: KyberTrade): void {
   swap.gasPrice = convertEthToGwei(event.transaction.gasPrice)
   swap.gasUsed = convertEthToDecimal(event.transaction.gasUsed)
   swap.platform = "KyberNetwork"
+  swap.platformFeeBps = event.params.platformFeeBps
+  swap.platformFeeWallet = event.params.platformWallet
+
+  let feeDistributed = FeeDistributed.load(event.transaction.hash.toHex())
+  if (feeDistributed != null) {
+    let feeToken = getToken(Address.fromString(feeDistributed.token))
+    swap.feeToken = feeToken.id
+    swap.feeAmount = convertTokenToDecimal(feeDistributed.platformFeeWei, feeToken.decimals)
+  }
+
   swap.save()
 
   handleSwap(swap)
@@ -65,7 +75,7 @@ export function handleUniswapTrade(event: UniswapTrade): void {
   let amountETH = srcAmountInEth.plus(dstAmountInEth).div(BigDecimal.fromString('2'));
   let ethPrice = getEthPriceInUSD();
 
-  let swap = new Swap(event.transaction.hash.toHexString());
+  let swap = new Swap(event.transaction.hash.toHex());
   swap.user = event.params.trader.toHex();
   swap.timestamp = event.block.timestamp;
   swap.trader = event.params.trader;
@@ -79,6 +89,23 @@ export function handleUniswapTrade(event: UniswapTrade): void {
   swap.gasPrice = convertEthToGwei(event.transaction.gasPrice);
   swap.gasUsed = convertEthToDecimal(event.transaction.gasUsed);
   swap.platform = "Uniswap"
+  swap.platformFeeBps = event.params.platformFeeBps
+  swap.platformFeeWallet = event.params.platformWallet
+
+  if (event.params.feeInSrc) {
+    swap.feeToken = src.id
+    swap.feeAmount = swap.srcAmount.times(swap.platformFeeBps.toBigDecimal())
+    .div(
+      BigInt.fromI32(10000).minus(swap.platformFeeBps).toBigDecimal()
+      )
+  } else {
+    swap.feeToken = dst.id
+    swap.feeAmount = swap.dstAmount.times(swap.platformFeeBps.toBigDecimal())
+    .div(
+      BigInt.fromI32(10000).minus(swap.platformFeeBps).toBigDecimal()
+      )
+  }
+
   swap.save()
 
   handleSwap(swap)

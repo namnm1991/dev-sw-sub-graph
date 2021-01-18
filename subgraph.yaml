@@ -52,3 +52,23 @@ dataSources:
         - event: WithdrawFromLending(indexed uint8,address,uint256,uint256,uint256,bool,uint256)
           handler: handleWithdrawFromLending
       file: ./src/mappings/swap.ts
+  - kind: ethereum/contract
+    name: FeeHandler
+    network: ropsten
+    source:
+      address: "0xfF456D9A8cbB5352eF77dEc2337bAC8dEC63bEAC"
+      abi: FeeHandler
+      startBlock: 9309234
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      entities:
+        - FeeDistributed
+      abis:
+        - name: FeeHandler
+          file: ./abis/feeHandler.json
+      eventHandlers:
+        - event: FeeDistributed(indexed address,indexed address,uint256,uint256,uint256,address[],uint256[],uint256)
+          handler: handleFeeDistributed
+      file: ./src/mappings/feeDistributed.ts
