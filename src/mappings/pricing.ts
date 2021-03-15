@@ -1,4 +1,4 @@
-import { BigDecimal, Address, BigInt } from '@graphprotocol/graph-ts';
+import { BigDecimal, Address, BigInt, dataSource } from '@graphprotocol/graph-ts';
 import { UniswapRouter } from '../types/Swap/UniswapRouter';
 import { KyberNetwork } from '../types/Swap/KyberNetwork';
 
@@ -6,12 +6,30 @@ import { ZERO_BD, ONE_BD, ZERO_BI, convertTokenToDecimal, convertEthToDecimal } 
 import { Token } from "../types/schema"
 import { getToken } from './token';
 
+let addresses = new Map<string, string>();
+if (dataSource.network() == 'ropsten') {
+  addresses.set('kn', '0xd719c34261e099Fdb33030ac8909d5788D3039C4')
+  addresses.set('weth', '0xd719c34261e099Fdb33030ac8909d5788D3039C4')
+  addresses.set('dai', '0xd719c34261e099Fdb33030ac8909d5788D3039C4')
+  addresses.set('usdc', '0x0d9c8723b343a8368bebe0b5e89273ff8d712e3c')
+  addresses.set('usdt', '0x516de3a7a567d81737e3a46ec4ff9cfd1fcb0136')
+} else {
+  addresses.set('kn', '0x9AAb3f75489902f3a48495025729a0AF77d4b11e')
+  addresses.set('weth', '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2')
+  addresses.set('dai', '0x6b175474e89094c44da98b954eedeac495271d0f')
+  addresses.set('usdc', '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48')
+  addresses.set('usdt', '0xdac17f958d2ee523a2206206994597c13d831ec7')
+}
+
 const ROUTER_ADDRESS = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D'
-const KYBER_NETWORK_ADDRESS = '0xd719c34261e099Fdb33030ac8909d5788D3039C4'
+const KYBER_NETWORK_ADDRESS = addresses.get('kn');
 
 const ETH_ADDRESS = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
-const WETH_ADDRESS = '0xc778417e063141139fce010982780140aa0cd5ab'
-const DAI_ADDRESS = '0xad6d458402f60fd3bd25163575031acdce07538d'
+const WETH_ADDRESS = addresses.get('weth')
+const DAI_ADDRESS = addresses.get('dai')
+const USDC_ADDRESS = addresses.get('usdc')
+const USDT_ADDRESS = addresses.get('usdt')
+
 // const USDC_ADDRESS = '0x0d9c8723b343a8368bebe0b5e89273ff8d712e3c'
 // const USDT_ADDRESS = '0x516de3a7a567d81737e3a46ec4ff9cfd1fcb0136'
 
@@ -21,10 +39,10 @@ const DAI_ADDRESS = '0xad6d458402f60fd3bd25163575031acdce07538d'
 
 // token where amounts should contribute to tracked volume and liquidity
 let WHITELIST: string[] = [
-  '0xc778417e063141139fce010982780140aa0cd5ab', // WETH
-  '0xad6d458402f60fd3bd25163575031acdce07538d', // DAI
-  '0x0d9c8723b343a8368bebe0b5e89273ff8d712e3c', // USDC
-  '0x516de3a7a567d81737e3a46ec4ff9cfd1fcb0136', // USDT
+  WETH_ADDRESS, // WETH
+  DAI_ADDRESS, // DAI
+  USDC_ADDRESS, // USDC
+  USDT_ADDRESS, // USDT
 ]
 
 let uniswapRouter = UniswapRouter.bind(Address.fromString(ROUTER_ADDRESS))
