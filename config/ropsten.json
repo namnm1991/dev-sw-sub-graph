@@ -1,6 +1,6 @@
 {
   "network": "ropsten",
-  "smart_wallet_address": "0x4A0C59CcCae7B4F0732a4A1b9A7BDA49cc1d88F9",
-  "deploy_block": 9309234,
+  "smart_wallet_address": "0x1e49809B423C1E45645E523804E77584414963E6",
+  "deploy_block": 9798620,
   "fee_handler_address": "0xfF456D9A8cbB5352eF77dEc2337bAC8dEC63bEAC"
 }
