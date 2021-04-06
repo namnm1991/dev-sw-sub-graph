@@ -58,6 +58,7 @@ export function handleKyberTrade(event: KyberTrade): void {
     let feeToken = getToken(Address.fromString(feeDistributed.token))
     swap.feeToken = feeToken.id
     swap.feeAmount = convertTokenToDecimal(feeDistributed.platformFeeWei, feeToken.decimals)
+    swap.feeAmountInETH = swap.feeAmount
   }
 
   swap.save()
@@ -92,18 +93,19 @@ export function handleUniswapTrade(event: UniswapTrade): void {
   swap.platformFeeBps = event.params.platformFeeBps
   swap.platformFeeWallet = event.params.platformWallet
 
+  // because the amount in event is fee deducted 
+  let feeRatio = swap.platformFeeBps.toBigDecimal().div(
+    BigInt.fromI32(10000).minus(swap.platformFeeBps).toBigDecimal()
+  )
+
   if (event.params.feeInSrc) {
     swap.feeToken = src.id
-    swap.feeAmount = swap.srcAmount.times(swap.platformFeeBps.toBigDecimal())
-    .div(
-      BigInt.fromI32(10000).minus(swap.platformFeeBps).toBigDecimal()
-      )
+    swap.feeAmount = swap.srcAmount.times(feeRatio)
+    swap.feeAmountInETH = srcAmountInEth.times(feeRatio)
   } else {
     swap.feeToken = dst.id
-    swap.feeAmount = swap.dstAmount.times(swap.platformFeeBps.toBigDecimal())
-    .div(
-      BigInt.fromI32(10000).minus(swap.platformFeeBps).toBigDecimal()
-      )
+    swap.feeAmount = swap.dstAmount.times(feeRatio)
+    swap.feeAmountInETH = dstAmountInEth.times(feeRatio)
   }
 
   swap.save()
@@ -204,13 +206,102 @@ export function handleKyberTradeTmpl(event: KyberTrade): void {
   // - contract.withdrawFromLendingPlatform(...)
 }
 
-export function handleKyberTradeAndDeposit(event: KyberTradeAndDeposit): void { }
+export function handleKyberTradeAndDeposit(event: KyberTradeAndDeposit): void {
+  let src = getToken(event.params.src)
+  let dst = getToken(event.params.dest)
+  // it's deposit only
+  if (src.id == dst.id) {
+    return
+  }
+
+  let srcAmount = convertTokenToDecimal(event.params.srcAmount, src.decimals)
+  let srcAmountInEth = getTokenPriceInEthKN(src, event.params.srcAmount).times(srcAmount)
+
+  let dstAmount = convertTokenToDecimal(event.params.destAmount, dst.decimals)
+  let dstAmountInEth = getTokenPriceInEthKN(dst, event.params.destAmount).times(dstAmount)
+
+  let amountETH = srcAmountInEth.plus(dstAmountInEth).div(BigDecimal.fromString('2'))
+  let ethPrice = getEthPriceInUSD()
+
+  let swap = new Swap(event.transaction.hash.toHex())
+  swap.user = event.params.trader.toHex()
+  swap.timestamp = event.block.timestamp
+  swap.trader = event.params.trader
+  swap.src = src.id;
+  swap.srcAmount = convertTokenToDecimal(event.params.srcAmount, src.decimals);
+  swap.dst = dst.id;
+  swap.dstAmount = dstAmount
+  swap.amountETH = amountETH
+  swap.amountUSD = amountETH.times(ethPrice)
+  swap.recipient = event.params.trader
+  swap.gasPrice = convertEthToGwei(event.transaction.gasPrice)
+  swap.gasUsed = convertEthToDecimal(event.transaction.gasUsed)
+  swap.platform = "KyberNetwork"
+  swap.platformFeeBps = event.params.platformFeeBps
+  swap.platformFeeWallet = event.params.platformWallet
+
+
+  let feeDistributed = FeeDistributed.load(event.transaction.hash.toHex())
+  if (feeDistributed != null) {
+    let feeToken = getToken(Address.fromString(feeDistributed.token))
+    swap.feeToken = feeToken.id
+    swap.feeAmount = convertTokenToDecimal(feeDistributed.platformFeeWei, feeToken.decimals)
+    swap.feeAmountInETH = swap.feeAmount
+  }
+
+  swap.save()
+
+  handleSwap(swap)
+}
 
 export function handleKyberTradeAndRepay(event: KyberTradeAndRepay): void { }
 
-export function handleUniswapTradeAndDeposit(
-  event: UniswapTradeAndDeposit
-): void { }
+export function handleUniswapTradeAndDeposit(event: UniswapTradeAndDeposit): void {
+  let tradePath = event.params.tradePath;
+  let src = getToken(tradePath[0]);
+  let dst = getToken(tradePath[tradePath.length - 1]);
+
+  // it's deposit only
+  if (src.id == dst.id) {
+    return
+  }
+
+  let srcAmountInEth = getTokenInEth(src, event.params.srcAmount);
+  let dstAmountInEth = getTokenInEth(dst, event.params.destAmount);
+  let amountETH = srcAmountInEth.plus(dstAmountInEth).div(BigDecimal.fromString('2'));
+  let ethPrice = getEthPriceInUSD();
+
+  let swap = new Swap(event.transaction.hash.toHex());
+  swap.user = event.params.trader.toHex();
+  swap.timestamp = event.block.timestamp;
+  swap.trader = event.params.trader;
+  swap.src = src.id;
+  swap.srcAmount = convertTokenToDecimal(event.params.srcAmount, src.decimals);
+  swap.dst = dst.id;
+  swap.dstAmount = convertTokenToDecimal(event.params.destAmount, dst.decimals);
+  swap.amountETH = amountETH;
+  swap.amountUSD = amountETH.times(ethPrice);
+  swap.recipient = event.params.trader;
+  swap.gasPrice = convertEthToGwei(event.transaction.gasPrice);
+  swap.gasUsed = convertEthToDecimal(event.transaction.gasUsed);
+  swap.platform = "Uniswap"
+  swap.platformFeeBps = event.params.platformFeeBps
+  swap.platformFeeWallet = event.params.platformWallet
+
+  {
+    swap.feeToken = dst.id
+    let feeRatio = swap.platformFeeBps.toBigDecimal().div(
+      BigInt.fromI32(10000).minus(swap.platformFeeBps).toBigDecimal()
+    )
+    // deposit take fee in dst token
+    swap.feeAmount = swap.dstAmount.times(feeRatio)
+    swap.feeAmountInETH = dstAmountInEth.times(feeRatio)
+  }
+
+  swap.save()
+
+  handleSwap(swap)
+}
 
 export function handleUniswapTradeAndRepay(event: UniswapTradeAndRepay): void { }
 

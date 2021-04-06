@@ -59,6 +59,7 @@ type Swap @entity {
 
   feeToken: Token!
   feeAmount: BigDecimal!
+  feeAmountInETH: BigDecimal!
 }
 
 # type TokenDayData @entity {

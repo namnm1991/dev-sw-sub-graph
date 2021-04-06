@@ -7,6 +7,9 @@ import {
   ZERO_BD,
   ZERO_BI
 } from './helpers'
+import {
+  WETH_ADDRESS, ETH_ADDRESS
+} from './addresses'
 
 export function getToken(address: Address): Token {
   let token = Token.load(address.toHex())
@@ -24,4 +27,8 @@ export function getToken(address: Address): Token {
   }
 
   return token as Token
+}
+
+export function isETH(token: Token): boolean {
+  return token.id == WETH_ADDRESS || token.id == ETH_ADDRESS
 }
